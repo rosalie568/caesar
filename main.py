@@ -1,5 +1,11 @@
 from caesar import encrypt
 import webapp2
+import cgi
+import re
+
+USER_RE = re.compile(r"^[a-zA-Z]$")
+def valid_text(text):
+    return USER_RE.match(text)
 
 rot13_form="""
 <!DOCTYPE html>
@@ -10,7 +16,7 @@ rot13_form="""
     <body>
         <h1>Enter some text to ROT13!</h1>
         <form method="post">
-            <textarea name="text" placeholder="%(text)s" style="height: 100px; width: 400px;"></textarea><br><br>
+            <textarea name="text" style="height: 100px; width: 400px;">%(text)s</textarea><br><br>
             <input type="submit" value="Submit" />
         </form>
     </body>
@@ -31,8 +37,16 @@ class MainHandler(webapp2.RequestHandler):
 
     def post(self):
         text = self.request.get('text')
+        text = cgi.escape(text, quote=True)
+        ans = ""
 
-        self.write_form(text)
+        for i in text:
+            if valid_text( i ):
+                ans += encrypt( i, 13)
+            else:
+                ans += cgi.escape( i , quote=True)
+
+        self.write_form( ans )
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)

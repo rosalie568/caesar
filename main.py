@@ -11,16 +11,38 @@ rot13_form="""
 <!DOCTYPE html>
 <html>
     <head>
-        <title> Caesar Page </title>
+        <style>
+            form {
+                background-color: #eee;
+                padding: 20px;
+                margin: 0 auto;
+                width: 540px;
+                font: 16px sans-serif;
+                border-radius: 10px;
+            }
+            textarea {
+                margin: 10px 0;
+                width: 540px;
+                height: 120px;
+            }
+            p.error {
+                color: red;
+            }
+        </style>
     </head>
     <body>
-        <h1>Enter some text to ROT13!</h1>
         <form method="post">
-            <textarea name="text" style="height: 100px; width: 400px;">%(text)s</textarea><br><br>
+            <div>
+                <label for="rot">Rotate by:</label>
+                <input type="text" name="rotate" value="0">
+                <p class="error"></p>
+            </div>
+            <textarea type="text" name="text">%(text)s</textarea>
+            <br>
             <input type="submit" value="Submit" />
         </form>
     </body>
-</html
+</html>
 """
 
 #answer = encrypt("Hello, Zach!", 2)
@@ -29,8 +51,9 @@ rot13_form="""
 
 class MainHandler(webapp2.RequestHandler):
 
-    def write_form(self, text=""):
-               self.response.out.write(rot13_form % {'text': text})
+    def write_form(self, text="", rotate=""):
+               self.response.out.write(rot13_form % {'text': text,
+                                    'rotate': rotate })
 
     def get(self):
         self.write_form()
@@ -38,15 +61,16 @@ class MainHandler(webapp2.RequestHandler):
     def post(self):
         text = self.request.get('text')
         text = cgi.escape(text, quote=True)
+        rotate = self.request.get('rotate')
         ans = ""
 
         for i in text:
             if valid_text( i ):
-                ans += encrypt( i, 13)
+                ans += encrypt( i, rotate)
             else:
                 ans += cgi.escape( i , quote=True)
 
-        self.write_form( ans )
+        self.write_form( ans, rotate )
 
 app = webapp2.WSGIApplication([
     ('/', MainHandler)
